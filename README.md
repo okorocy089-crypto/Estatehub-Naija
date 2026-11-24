@@ -15,8 +15,8 @@ The project uses SQLite for local development, so you do not need to install a s
 Clone this repository, then change into the project directory containing `manage.py` and `requirements.txt`:
 
 ```bash
-git clone <repository-url>
-cd <repository-directory>
+git clone https://github.com/okorocy089-crypto/Estatehub-Naija.git
+cd ehub
 ```
 
 Replace `<repository-url>` with this repository's Git URL. If you already have the source code, open a terminal in the directory containing `manage.py`.
