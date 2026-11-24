@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Property Listings - EstateHub Naija{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-banner">
+    <div class="container hero-content">
+        <h1>Discover Premium Homes, Lands & Commercial Assets</h1>
+        <p style='color: white';>Explore verifyable properties across Owerri, Lagos, Abuja, and Port Harcourt. Connect directly with licensed agents via WhatsApp.</p>
+
+        <!-- Fast Search / Filter Form Syncing to URL Parameters -->
+        <form method="GET" action="{% url 'listings:property_list' %}" class="hero-search-form" id="filter-section">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Location / City</label>
+                    <select name="city" class="form-select">
+                        <option value="">All Locations</option>
+                        <option value="Owerri" {% if selected_city == "Owerri" %}selected{% endif %}>Owerri</option>
+                        <option value="Lagos" {% if selected_city == "Lagos" %}selected{% endif %}>Lagos</option>
+                        <option value="Abuja" {% if selected_city == "Abuja" %}selected{% endif %}>Abuja</option>
+                        <option value="Port Harcourt" {% if selected_city == "Port Harcourt" %}selected{% endif %}>Port Harcourt</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Listing Type</label>
+                    <select name="listing_type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="sale" {% if selected_type == "sale" %}selected{% endif %}>For Sale</option>
+                        <option value="rent" {% if selected_type == "rent" %}selected{% endif %}>For Rent</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Property Type</label>
+                    <select name="property_type" class="form-select">
+                        <option value="">All Properties</option>
+                        <option value="residential" {% if selected_property_type == "residential" %}selected{% endif %}>Residential</option>
+                        <option value="commercial" {% if selected_property_type == "commercial" %}selected{% endif %}>Commercial</option>
+                        <option value="luxury" {% if selected_property_type == "luxury" %}selected{% endif %}>Luxury Homes</option>
+                        <option value="land" {% if selected_property_type == "land" %}selected{% endif %}>Land &amp; Plots</option>
+                        <option value="rentals" {% if selected_property_type == "rentals" %}selected{% endif %}>Rentals</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>No. of Bedrooms</label>
+                    <select name="bedrooms" class="form-select">
+                        <option value="">Any</option>
+                        <option value="1" {% if selected_bedrooms == "1" %}selected{% endif %}>1-Bedroom</option>
+                        <option value="2" {% if selected_bedrooms == "2" %}selected{% endif %}>2-Bedroom</option>
+                        <option value="3" {% if selected_bedrooms == "3" %}selected{% endif %}>3-Bedroom</option>
+                        <option value="4" {% if selected_bedrooms == "4" %}selected{% endif %}>4-Bedroom</option>
+                        <option value="5" {% if selected_bedrooms == "5" %}selected{% endif %}>5-Bedroom</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="area-search">Area / Neighborhood</label>
+                    <input id="area-search" type="search" name="area" class="form-input" placeholder="e.g. Works Layout" value="{{ selected_area }}">
+                </div>
+
+                <div class="form-group submit-group">
+                    <button type="submit" class="btn btn-search">Search Listings</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Filter Strip & Metrics -->
+<div class="filter-summary-strip">
+    <div class="container summary-content">
+        <div>
+            Estatehub found <strong>{{ total_count }}</strong> properties
+            {% if selected_city %}in <strong>{{ selected_city }}</strong>{% endif %}
+            {% if selected_area %}around <strong>{{ selected_area }}</strong>{% endif %}
+            {% if selected_type %}for <strong>{{ selected_type|title }}</strong>{% endif %}
+        </div>
+        <div class="sort-controls">
+            <label>Sort By:</label>
+            <select onchange="location = this.value;" class="sort-select">
+                <option value="?sort_by=newest{% if selected_city %}&city={{ selected_city }}{% endif %}{% if selected_area %}&area={{ selected_area }}{% endif %}{% if selected_type %}&listing_type={{ selected_type }}{% endif %}{% if selected_property_type %}&property_type={{ selected_property_type }}{% endif %}" {% if selected_sort == 'newest' %}selected{% endif %}>Newest Added</option>
+                <option value="?sort_by=price_asc{% if selected_city %}&city={{ selected_city }}{% endif %}{% if selected_area %}&area={{ selected_area }}{% endif %}{% if selected_type %}&listing_type={{ selected_type }}{% endif %}{% if selected_property_type %}&property_type={{ selected_property_type }}{% endif %}" {% if selected_sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                <option value="?sort_by=price_desc{% if selected_city %}&city={{ selected_city }}{% endif %}{% if selected_area %}&area={{ selected_area }}{% endif %}{% if selected_type %}&listing_type={{ selected_type }}{% endif %}{% if selected_property_type %}&property_type={{ selected_property_type }}{% endif %}" {% if selected_sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                <option value="?sort_by=popular{% if selected_city %}&city={{ selected_city }}{% endif %}{% if selected_area %}&area={{ selected_area }}{% endif %}{% if selected_type %}&listing_type={{ selected_type }}{% endif %}{% if selected_property_type %}&property_type={{ selected_property_type }}{% endif %}" {% if selected_sort == 'popular' %}selected{% endif %}>Most Popular</option>
+            </select>
+            {% if selected_city or selected_area or selected_type or selected_property_type or selected_bedrooms or search_query %}
+                <a href="{% url 'listings:property_list' %}" class="clear-filters">Reset Filters ✕</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="container listing-tools">
+    {% if user.is_authenticated and has_active_filters %}
+    <details class="save-search-panel">
+        <summary class="btn btn-secondary">Save this search</summary>
+        <form method="post" action="{% url 'listings:save_search' %}" class="save-search-form">
+            {% csrf_token %}
+            <label for="saved-search-name">Search name</label>
+            <input id="saved-search-name" class="form-input" type="text" name="name" maxlength="100" value="{{ saved_search_form.name.value|default:'My property search' }}" required>
+            {% for key, value in filter_values.items %}
+            {% if value %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}
+            {% endfor %}
+            <label class="save-search-alert-option">
+                <input type="checkbox" name="email_alerts" checked>
+                Email me when a new matching property is listed
+            </label>
+            <button type="submit" class="btn btn-primary">Save search</button>
+        </form>
+    </details>
+    {% elif not user.is_authenticated and has_active_filters %}
+    <a class="btn btn-secondary" href="{% url 'listings:auth_login' %}?next={{ request.get_full_path|urlencode }}">Log in to save searches</a>
+    {% endif %}
+</div>
+
+<div class="container main-listings-container">
+    <!-- Featured Properties Section (If on page 1 with no filters) -->
+    {% if featured_properties and not selected_city and not selected_area and not selected_type and not selected_property_type and not search_query and page_obj.number == 1 %}
+    <section class="featured-section">
+        <div class="section-header">
+            <h2>★ Featured Verified Opportunities</h2>
+            <span>Handpicked prime titles across Nigeria</span>
+        </div>
+        <div class="properties-grid featured-grid">
+            {% for property in featured_properties %}
+            <article class="property-card featured-card">
+                <div class="card-media">
+                    {% if property.images.first %}
+                        <img src="{{ property.images.first.url }}" alt="{{ property.title }}" loading="lazy">
+                    {% else %}
+                        <div class="fallback-img">{{ property.city }}</div>
+                    {% endif %}
+                    <span class="badge-type">{{ property.get_listing_type_display }}</span>
+                    <span class="badge-featured">Featured</span>
+                </div>
+                <div class="card-body">
+                    <div class="card-meta">
+                        <span>{{ property.get_property_type_display }}</span>
+                        <span>·</span>
+                        <span>{{ property.city }}</span>
+                        <span>·</span>
+                        <span class="title-deed">{{ property.get_title_deed_display }}</span>
+                    </div>
+                    <h3><a href="{% url 'listings:property_detail' slug=property.slug %}">{{ property.title }}</a></h3>
+                    {% if property.area %}<div class="address">{{ property.area }}</div>{% endif %}
+                    
+                    <div class="specs-row">
+                        {% if property.bedrooms %}<span>{{ property.bedrooms }} Beds</span>{% endif %}
+                        {% if property.bathrooms %}<span>· {{ property.bathrooms }} Baths</span>{% endif %}
+                        {% if property.floor_area_sqm %}<span>· {{ property.floor_area_sqm }} m² floor</span>{% endif %}
+                        {% if property.plot_area_sqm %}<span>· {{ property.plot_area_sqm }} m² plot</span>{% endif %}
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="price">
+                            ₦{{ property.price|intcomma }}
+                            {% if property.listing_type == 'rent' %}<small>{{ property.get_rent_period_display|lower }}</small>{% endif %}
+                        </div>
+                        {% if property.price_negotiable %}<span class="price-negotiable">Negotiable</span>{% endif %}
+                        <a href="{{ property.get_whatsapp_url }}" target="_blank" class="btn-whatsapp">
+                            WhatsApp Agent
+                        </a>
+                        {% include "listings/partials/favorite_button.html" %}
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Main Properties Grid -->
+    <section class="catalog-section">
+        <div class="section-header">
+            <h2>Browse </h2>
+        </div>
+
+        {% if page_obj %}
+        <div class="properties-grid">
+            {% for property in page_obj %}
+            <article class="property-card">
+                <div class="card-media">
+                    {% if property.images.first %}
+                        <img src="{{ property.images.first.url }}" alt="{{ property.title }}" loading="lazy">
+                    {% else %}
+                        <div class="fallback-img">{{ property.city }}</div>
+                    {% endif %}
+                    <span class="badge-type">{{ property.get_listing_type_display }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="card-meta">
+                        <span>{{ property.get_property_type_display }}</span>
+                        <span>·</span>
+                        <span>{{ property.city }}</span>
+                        <span>·</span>
+                        <span class="title-deed">{{ property.get_title_deed_display }}</span>
+                    </div>
+                    <h3><a href="{% url 'listings:property_detail' slug=property.slug %}">{{ property.title }}</a></h3>
+                    {% if property.area %}<div class="address">{{ property.area }}</div>{% endif %}
+
+                    <div class="specs-row">
+                        {% if property.bedrooms %}<span>{{ property.bedrooms }} Beds</span>{% endif %}
+                        {% if property.bathrooms %}<span>· {{ property.bathrooms }} Baths</span>{% endif %}
+                        {% if property.floor_area_sqm %}<span>· {{ property.floor_area_sqm }} m² floor</span>{% endif %}
+                        {% if property.plot_area_sqm %}<span>· {{ property.plot_area_sqm }} m² plot</span>{% endif %}
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="price">
+                            ₦{{ property.price|intcomma }}
+                            {% if property.listing_type == 'rent' %}<small>{{ property.get_rent_period_display|lower }}</small>{% endif %}
+                        </div>
+                        {% if property.price_negotiable %}<span class="price-negotiable">Negotiable</span>{% endif %}
+                        <a href="{{ property.get_whatsapp_url }}" target="_blank" class="btn-whatsapp">
+                            WhatsApp Agent
+                        </a>
+                        {% include "listings/partials/favorite_button.html" %}
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination Controls -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if selected_city %}&city={{ selected_city }}{% endif %}{% if selected_area %}&area={{ selected_area }}{% endif %}{% if selected_type %}&listing_type={{ selected_type }}{% endif %}{% if selected_property_type %}&property_type={{ selected_property_type }}{% endif %}" class="page-link">&laquo; Previous</a>
+            {% endif %}
+
+            <span class="current-page">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if selected_city %}&city={{ selected_city }}{% endif %}{% if selected_area %}&area={{ selected_area }}{% endif %}{% if selected_type %}&listing_type={{ selected_type }}{% endif %}{% if selected_property_type %}&property_type={{ selected_property_type }}{% endif %}" class="page-link">Next &raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="no-results">
+            <h3>No Properties Found Matching Your Criteria</h3>
+            <p>Try widening your price range or clearing location filters.</p>
+            <br>
+            <br>
+            <a href="{% url 'listings:property_list' %}" class="btn btn-primary">Reset Filters</a>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

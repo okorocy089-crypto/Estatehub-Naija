@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Your Email - EstateHub Naija{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="auth-card">
+        <h1>Check your email</h1>
+        {% if email_backend_is_console %}
+        <p class="auth-intro">Email delivery is not configured in this environment. If this is your account email ({{ email }}), check the application server console for its 6-digit code. The code expires in 10 minutes.</p>
+        {% else %}
+        <p class="auth-intro">We sent a 6-digit verification code to {{ email }}. Enter it below. The code expires in 10 minutes.</p>
+        {% endif %}
+
+        {% if form.non_field_errors %}
+        <div class="auth-form-errors" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="auth-fields">
+                <div class="form-group">
+                    <label for="{{ form.code.id_for_label }}">{{ form.code.label }}</label>
+                    {{ form.code }}
+                    <div class="otp-digit-group" data-otp-target="{{ form.code.id_for_label }}" hidden role="group" aria-label="6-digit verification code">
+                        {% for digit in "123456" %}
+                        <input type="text" class="otp-digit" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="one-time-code" aria-label="Digit {{ forloop.counter }}">
+                        {% endfor %}
+                    </div>
+                    {% for error in form.code.errors %}<div class="auth-field-errors">{{ error }}</div>{% endfor %}
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Verify email</button>
+            </div>
+        </form>
+
+        <form method="post" class="agent-resend-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="resend">
+            <button type="submit" class="auth-alternate-link">Resend code</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

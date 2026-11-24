@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EstateHub Naija - Verified Property Listings{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+        <div class="container nav-content">
+            <a href="{% url 'listings:property_list' %}" class="brand-logo">EstateHub Naija</a>
+
+            <button class="mobile-menu-toggle" type="button" aria-label="Open navigation menu"
+                    aria-controls="site-navigation-menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <div class="mobile-menu" id="site-navigation-menu" aria-hidden="true">
+                <nav class="nav-links{% if user.is_authenticated %} nav-links-authenticated{% endif %}" aria-label="Main navigation">
+                    <a href="{% url 'listings:property_list' %}">Browse All</a>
+                    <a href="{% url 'listings:property_list' %}?listing_type=sale">Buy Property</a>
+                    <a href="{% url 'listings:property_list' %}?listing_type=rent">Rentals</a>
+                    <a href="{% url 'listings:saved_properties' %}">Saved</a>
+                </nav>
+
+                <div class="nav-actions">
+                    {% if user.is_authenticated %}
+                        <div class="mobile-account">
+                            <svg class="nav-profile-icon mobile-account-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M20 21a8 8 0 0 0-16 0"></path>
+                                <circle cx="12" cy="8" r="4"></circle>
+                            </svg>
+                            <span class="mobile-account-name">Hi, {{ user.first_name|default:user.email }}</span>
+                            <form method="post" action="{% url 'listings:auth_logout' %}" class="nav-logout-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-secondary">Logout</button>
+                            </form>
+                        </div>
+                    {% endif %}
+
+                    {% if user.is_authenticated and user.agent_profile %}
+                        <a href="{% url 'listings:agent_dashboard' %}" class="nav-agent-dashboard-link">
+                            {% if user.agent_profile.photo %}
+                            <img src="{{ user.agent_profile.photo.url }}" alt="" class="nav-agent-photo">
+                            {% else %}
+                            <span class="nav-agent-photo nav-agent-photo-placeholder" aria-hidden="true">A</span>
+                            {% endif %}
+                            <span style='padding: 3px;'>Agent Dashboard</span>
+                        </a>
+                    {% elif user.is_authenticated %}
+                        <a href="{% url 'listings:agent_registration' %}" class="btn btn-secondary">Become an Agent</a>
+                    {% else %}
+                        <a href="{% url 'listings:auth_register' %}" class="btn btn-primary">Register Now</a>
+                        <a href="{% url 'listings:auth_login' %}" class="mobile-auth-link">Login/Sign-up</a>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                        <details class="nav-profile">
+                            <summary class="nav-profile-toggle" aria-label="Open profile menu">
+                                <svg class="nav-profile-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <path d="M20 21a8 8 0 0 0-16 0"></path>
+                                    <circle cx="12" cy="8" r="4"></circle>
+                                </svg>
+                            </summary>
+                            <div class="nav-profile-menu">
+                                <span class="nav-profile-name">Hi, {{ user.first_name|default:user.email }}</span>
+                                <form method="post" action="{% url 'listings:auth_logout' %}" class="nav-logout-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-secondary">Logout</button>
+                                </form>
+                            </div>
+                        </details>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Toast notifications -->
+    {% if messages %}
+    <div class="messages-container" aria-live="polite" aria-relevant="additions">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" role="{% if 'error' in message.tags %}alert{% else %}status{% endif %}" aria-atomic="true" data-toast>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content Block -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Site Footer -->
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div class="footer-col">
+                <div class="footer-brand">EstateHub Naija</div>
+                <p>Nigeria's verified Residential and Commercial Real Estate platform</p>
+            </div>
+
+            <div class="footer-col">
+                <h4>Explore</h4>
+                <ul>
+                    <li><a href="{% url 'listings:property_list' %}">Browse properties</a></li>
+                    <li><a href="{% url 'listings:property_list' %}?listing_type=sale">Homes for sale</a></li>
+                    <li><a href="{% url 'listings:property_list' %}?listing_type=rent">Homes for rent</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>For agents</h4>
+                <ul>
+                    {% if user.is_authenticated and user.agent_profile %}
+                    <li><a href="{% url 'listings:agent_dashboard' %}">Agent dashboard</a></li>
+                    <li><a href="{% url 'listings:property_create' %}">Create a listing</a></li>
+                    {% else %}
+                    <li><a href="{% url 'listings:agent_registration' %}">Become an agent</a></li>
+                    {% endif %}
+                </ul>
+                <h4>Account</h4>
+                <ul>
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'listings:saved_properties' %}">Saved properties</a></li>
+                    <li><a href="{% url 'listings:saved_searches' %}">Saved searches</a></li>
+                    {% else %}
+                    <li><a href="{% url 'listings:auth_register' %}">Create account</a></li>
+                    <li><a href="{% url 'listings:auth_login' %}">Log in</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Help &amp; trust</h4>
+                <ul>
+                    <li><a href="{% url 'listings:site_info' slug='about' %}">About us</a></li>
+                    <li><a href="{% url 'listings:site_info' slug='verification' %}">Listing verification</a></li>
+                    <li><a href="{% url 'listings:site_info' slug='safety' %}">Safety tips</a></li>
+                    <li><a href="{% url 'listings:site_info' slug='contact' %}">Contact support</a></li>
+                </ul>
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="{% url 'listings:site_info' slug='privacy' %}">Privacy notice</a></li>
+                    <li><a href="{% url 'listings:site_info' slug='terms' %}">Terms of use</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>WhatsApp help desk</h4>
+                <p>Need help or facing an issue? Contact us via WhatsApp.</p>
+                <a href="https://wa.me/2347038731910?text=Hello%20EstateHub%20Support" class="whatsapp-btn-footer" target="_blank">
+                    Chat on WhatsApp
+                </a>
+            </div>
+        </div>
+        <div class="container footer-bottom">
+            <div>&copy; {% now "Y" %}. EstateHub Naija</div>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

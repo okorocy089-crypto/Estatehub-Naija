@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Become an Agent - EstateHub Naija{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="auth-card">
+        <h1>Become an Agent</h1>
+        <p class="auth-intro">Start by adding your contact details. We’ll send a verification code to your account email address: <strong>{{ request.user.email }}</strong></p>
+
+        {% if form.non_field_errors %}
+        <div class="auth-form-errors" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            <div class="auth-fields">
+                {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {% if field.name == 'photo' %}
+                    <div class="profile-photo-picker" data-photo-picker>
+                        {{ field }}
+                        <button type="button" class="btn btn-primary profile-photo-choose" data-photo-choose>
+                            Choose from gallery
+                        </button>
+                        <button type="button" class="profile-photo-preview" data-photo-preview hidden aria-label="Edit selected profile photo">
+                            <img data-photo-preview-image alt="Selected profile photo preview">
+                        </button>
+                    </div>
+                    {% else %}
+                    {{ field }}
+                    {% endif %}
+                    {% for error in field.errors %}<div class="auth-field-errors">{{ error }}</div>{% endfor %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary btn-block">Continue</button>
+            </div>
+            <dialog class="profile-photo-editor" data-photo-editor aria-labelledby="profile-photo-editor-title">
+                <div class="profile-photo-editor-content">
+                    <h2 id="profile-photo-editor-title">Adjust your profile photo</h2>
+                    <p>Drag the image to reposition it, or use the slider to zoom.</p>
+                    <div class="profile-photo-crop-stage" data-photo-stage>
+                        <img data-photo-source alt="Profile photo crop preview">
+                    </div>
+                    <label class="profile-photo-zoom-label" for="profile-photo-zoom">Zoom</label>
+                    <input id="profile-photo-zoom" class="profile-photo-zoom" type="range" min="1" max="3" step="0.01" value="1" data-photo-zoom>
+                    <div class="profile-photo-editor-actions">
+                        <button type="button" class="btn btn-secondary" data-photo-cancel>Cancel</button>
+                        <button type="button" class="btn btn-primary" data-photo-apply>Use photo</button>
+                    </div>
+                </div>
+            </dialog>
+        </form>
+    </div>
+</section>
+{% endblock %}

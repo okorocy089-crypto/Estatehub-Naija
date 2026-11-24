@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ property.title }} - EstateHub Naija{% endblock %}
+
+{% block content %}
+<div class="container detail-page-container">
+    <div class="breadcrumbs">
+        <a href="{% url 'listings:property_list' %}">All Properties</a> &gt;
+        <a href="{% url 'listings:property_list' %}?city={{ property.city }}">{{ property.city }}</a> &gt;
+        <span>{{ property.title }}</span>
+    </div>
+
+    <div class="detail-grid">
+        <!-- Main Content: Photos & Specs -->
+        <div class="detail-main">
+            <div class="gallery-wrapper">
+                {% with gallery_images=property.images.all %}
+                {% if gallery_images %}
+                <div class="main-image" data-property-gallery>
+                    <img
+                        id="activeGalleryImage"
+                        class="gallery-main-image"
+                        src="{{ gallery_images.0.url }}"
+                        alt="{{ gallery_images.0.caption|default:property.title }}"
+                        data-gallery-main
+                    >
+                    {% if gallery_images|length > 1 %}
+                    <button class="gallery-arrow gallery-arrow-previous" type="button" aria-label="Show previous image" data-gallery-previous>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                            <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8m15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5z"/>
+                        </svg>
+                    </button>
+                    <button class="gallery-arrow gallery-arrow-next" type="button" aria-label="Show next image" data-gallery-next>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                            <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8m15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0M4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5z"/>
+                        </svg>
+                    </button>
+                    <span class="gallery-image-count" aria-live="polite" data-gallery-count>1 / {{ gallery_images|length }}</span>
+                    {% endif %}
+                </div>
+                {% else %}
+                    <div class="main-image"><div class="fallback-img">{{ property.city }}</div></div>
+                {% endif %}
+
+                {% if gallery_images|length > 1 %}
+                <div class="thumbnail-strip">
+                    {% for img in gallery_images %}
+                    <button
+                        class="thumb-button{% if forloop.first %} is-active{% endif %}"
+                        type="button"
+                        aria-label="Show image {{ forloop.counter }}"
+                        aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
+                        data-gallery-thumbnail
+                        data-gallery-index="{{ forloop.counter0 }}"
+                        data-gallery-src="{{ img.url }}"
+                        data-gallery-alt="{{ img.caption|default:property.title }}"
+                    >
+                        <img src="{{ img.url }}" alt="" class="thumb-item">
+                    </button>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+
+            <!-- Key Specifications Strip -->
+            <div class="specs-grid-bar">
+                {% if property.bedrooms %}
+                <div class="spec-cell">
+                    <span class="label">Bedrooms</span>
+                    <span class="val">{{ property.bedrooms }} Ensuite</span>
+                </div>
+                {% endif %}
+                {% if property.bathrooms %}
+                <div class="spec-cell">
+                    <span class="label">Bathrooms</span>
+                    <span class="val">{{ property.bathrooms }} Baths</span>
+                </div>
+                {% endif %}
+                <div class="spec-cell">
+                    <span class="label">Floor/Plot Area</span>
+                    <span class="val">
+                        {% if property.floor_area_sqm %}{{ property.floor_area_sqm }} m² floor{% endif %}
+                        {% if property.floor_area_sqm and property.plot_area_sqm %} · {% endif %}
+                        {% if property.plot_area_sqm %}{{ property.plot_area_sqm }} m² plot{% endif %}
+                        {% if not property.floor_area_sqm and not property.plot_area_sqm %}Not specified{% endif %}
+                    </span>
+                </div>
+                {% if property.furnished %}
+                <div class="spec-cell">
+                    <span class="label">Furnished</span>
+                    <span class="val">{{ property.furnished }}</span>
+                </div>
+                {% endif %}
+                <div class="spec-cell">
+                    <span class="label">Title Document</span>
+                    <span class="val highlight">{{ property.get_title_deed_display }}</span>
+                    {% if property.title_deed_document %}
+                    <a class="title-deed-link" href="{{ property.title_deed_document.url }}" target="_blank" rel="noopener">
+                        View title deed document
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sidebar: Price, Agent & Inquiry Form -->
+        <aside class="detail-sidebar">
+            <div class="sticky-inquiry-box">
+                <div class="detail-price-actions">
+                    <div class="price-box">
+                        <span class="price-label">Price</span>
+                        <div class="price-val">
+                            ₦{{ property.price|intcomma }}
+                            {% if property.listing_type == 'rent' %}<small>{{ property.get_rent_period_display|lower }}</small>{% endif %}
+                        </div>
+                        {% if property.price_negotiable %}<span class="price-negotiable">Price negotiable</span>{% endif %}
+                        <div class="status-indicator status-{{ property.status }}">
+                            {{ property.get_status_display }}
+                        </div>
+                    </div>
+                    {% include "listings/partials/favorite_button.html" with property=property is_favorite=is_favorite %}
+                </div>
+
+                <div class="detail-contact-row{% if property.agent %} has-agent{% endif %}">
+                    <a href="{{ whatsapp_url }}" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-large" aria-label="Chat on WhatsApp">
+                        <img src="{% static 'images/WAlogo.jpg' %}" alt="" width="22" height="22">
+                        <span>Chat Directly on WhatsApp</span>
+                    </a>
+                    {% if property.agent %}
+                    <div class="agent-card">
+                        <div class="agent-info">
+                            <strong>{{ property.agent.name }} • Seller</strong>
+                            <span>{{ property.agent.agency }}</span>
+                            <div class="phone">📞 {{ property.agent.phone }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </aside>
+
+        <div class="property-content-card">
+            <!-- Description -->
+            <section class="property-content-section">
+                <h2>Property Overview</h2>
+                <p class="description-text">{{ property.description|linebreaks }}</p>
+            </section>
+
+            <!-- Amenities -->
+            {% if property.amenities_list %}
+            <section class="property-content-section">
+                <h2>Amenities & Features</h2>
+                <div class="amenities-grid">
+                    {% for amenity in property.amenities_list %}
+                    <div class="amenity-item">{{ amenity }}</div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- Location & Map -->
+            <section class="property-content-section">
+                <h2>Location & Address</h2>
+                <p>
+                    {% if property.address %}<strong>Address:</strong> {{ property.address }}, {% endif %}
+                    {% if property.area %}<strong>Area:</strong> {{ property.area }}, {% endif %}
+                    {{ property.city }}, {{ property.state }}
+                </p>
+            </section>
+        </div>
+    </div>
+
+    <!-- Similar Properties -->
+    {% if similar_properties %}
+    <section class="similar-properties-section">
+        <h2>Similar Properties in {{ property.city }}</h2>
+        <div class="properties-grid">
+            {% for sim in similar_properties %}
+            <article class="property-card">
+                <div class="card-media">
+                    {% if sim.images.first %}
+                        <img src="{{ sim.images.first.url }}" alt="{{ sim.title }}">
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h3><a href="{% url 'listings:property_detail' slug=sim.slug %}">{{ sim.title }}</a></h3>
+                    <div class="price">₦{{ sim.price|intcomma }}</div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

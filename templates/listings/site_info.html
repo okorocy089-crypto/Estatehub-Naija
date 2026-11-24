@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - EstateHub Naija{% endblock %}
+
+{% block content %}
+<article class="container site-info-page">
+    <p class="eyebrow">EstateHub Naija</p>
+    <h1>{{ title }}</h1>
+    <p class="site-info-intro">{{ intro }}</p>
+    <div class="site-info-sections">
+        {% for heading, body in sections %}
+        <section>
+            <h2>{{ heading }}</h2>
+            <p>{{ body }}</p>
+        </section>
+        {% endfor %}
+    </div>
+    {% if page_slug == "contact" %}
+    <a class="btn btn-primary" href="https://wa.me/2347038731910?text=Hello%20EstateHub%20Support" target="_blank" rel="noopener noreferrer">Chat with support on WhatsApp</a>
+    {% endif %}
+</article>
+{% endblock %}

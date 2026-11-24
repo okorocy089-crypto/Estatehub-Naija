@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Saved searches - EstateHub Naija{% endblock %}
+
+{% block content %}
+<section class="container saved-feature-page">
+    <header class="saved-feature-heading">
+        <p class="eyebrow">Your account</p>
+        <h1>Saved searches</h1>
+        <p>Manage your search filters and choose whether to receive matching-listing email alerts.</p>
+    </header>
+
+    {% if saved_searches %}
+    <div class="saved-search-list">
+        {% for search in saved_searches %}
+        <article class="saved-search-card">
+            <div class="saved-search-summary">
+                <h2>{{ search.name }}</h2>
+                <p>
+                    {% for key, value in search.criteria.items %}
+                    <span class="saved-search-filter">{{ key|title }}: {{ value }}</span>
+                    {% endfor %}
+                </p>
+                <a class="saved-search-open" href="{% url 'listings:property_list' %}?{{ search.query_string }}">View matching properties</a>
+                <span class="saved-search-alert-status">
+                    Email alerts {% if search.email_alerts %}on{% else %}off{% endif %}
+                </span>
+            </div>
+            <div class="saved-search-actions">
+                <form method="post" action="{% url 'listings:saved_search_action' search_id=search.pk action='rename' %}" class="saved-search-rename">
+                    {% csrf_token %}
+                    <label class="visually-hidden" for="search-name-{{ search.pk }}">Rename {{ search.name }}</label>
+                    <input class="form-input" id="search-name-{{ search.pk }}" name="name" value="{{ search.name }}" maxlength="100" required>
+                    <button class="btn btn-secondary" type="submit">Rename</button>
+                </form>
+                <form method="post" action="{% url 'listings:saved_search_action' search_id=search.pk action='toggle-alerts' %}">
+                    {% csrf_token %}
+                    <button class="btn btn-secondary" type="submit">
+                        {% if search.email_alerts %}Pause alerts{% else %}Enable alerts{% endif %}
+                    </button>
+                </form>
+                <form method="post" action="{% url 'listings:saved_search_action' search_id=search.pk action='delete' %}">
+                    {% csrf_token %}
+                    <button class="btn btn-danger" type="submit">Delete</button>
+                </form>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="saved-feature-empty">
+        <h2>No saved searches yet</h2>
+        <p>Apply at least one filter while browsing and choose Save this search.</p>
+        <a class="btn btn-primary" href="{% url 'listings:property_list' %}">Browse properties</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

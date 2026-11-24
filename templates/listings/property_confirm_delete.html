@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Delist Property - EstateHub Naija{% endblock %}
+
+{% block content %}
+<section class="auth-page property-form-page">
+    <div class="auth-card property-delete-card">
+        <h1>Delist this property?</h1>
+        <p class="auth-intro">
+            “{{ object.title }}” will be permanently deleted from the database, including its property images and inquiries.
+            This action cannot be undone.
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="property-form-actions">
+                <a href="{% url 'listings:agent_dashboard' %}" class="btn btn-secondary">Keep listing</a>
+                <button type="submit" class="btn btn-danger">Confirm delist</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

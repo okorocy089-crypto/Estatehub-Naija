@@ -1,0 +1,8 @@
+Django>=6.1,<6.2
+pillow>=10.0.0
+django-filter>=26.2,<27
+django-humanize
+django-allauth>=65.13,<66
+gunicorn>=21.2.0
+google-auth>=2.40.0,<3
+requests>=2.32.0,<3

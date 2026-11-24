@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Agent Workspace - EstateHub Naija{% endblock %}
+{% block body_class %}agent-dashboard-page{% endblock %}
+
+{% block content %}
+<div class="agent-dashboard">
+    <nav class="agent-dashboard-nav" aria-label="Agent dashboard">
+        <div class="container agent-dashboard-nav-inner">
+            <div class="agent-dashboard-tabs">
+                <a href="{% url 'listings:agent_dashboard' %}?tab=active"
+                   class="agent-dashboard-tab{% if selected_tab == 'active' %} is-active{% endif %}"
+                   {% if selected_tab == 'active' %}aria-current="page"{% endif %}>
+                    Active Listings
+                </a>
+                <a href="{% url 'listings:agent_dashboard' %}?tab=history"
+                   class="agent-dashboard-tab{% if selected_tab == 'history' %} is-active{% endif %}"
+                   {% if selected_tab == 'history' %}aria-current="page"{% endif %}>
+                    History
+                </a>
+                <a href="{% url 'listings:agent_dashboard' %}?tab=profile"
+                   class="agent-dashboard-tab{% if selected_tab == 'profile' %} is-active{% endif %}"
+                   {% if selected_tab == 'profile' %}aria-current="page"{% endif %}>
+                    Profile
+                </a>
+            </div>
+            <a href="{% url 'listings:property_create' %}" class="btn btn-primary agent-dashboard-new-listing">New listing</a>
+        </div>
+    </nav>
+
+    <nav class="agent-dashboard-mobile-nav" aria-label="Agent dashboard mobile navigation">
+        <a href="{% url 'listings:agent_dashboard' %}?tab=active"
+           class="agent-dashboard-mobile-link agent-dashboard-mobile-active{% if selected_tab == 'active' %} is-active{% endif %}"
+           {% if selected_tab == 'active' %}aria-current="page"{% endif %}>
+            <span class="agent-dashboard-active-dot" aria-hidden="true"></span>
+            <span>Active</span>
+        </a>
+        <a href="{% url 'listings:property_create' %}"
+           class="agent-dashboard-mobile-link agent-dashboard-mobile-icon"
+           aria-label="New listing">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+            </svg>
+        </a>
+        <a href="{% url 'listings:agent_dashboard' %}?tab=history"
+           class="agent-dashboard-mobile-link agent-dashboard-mobile-icon{% if selected_tab == 'history' %} is-active{% endif %}"
+           aria-label="History" {% if selected_tab == 'history' %}aria-current="page"{% endif %}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2-circle" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0"/>
+                <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z"/>
+            </svg>
+        </a>
+        <a href="{% url 'listings:agent_dashboard' %}?tab=profile"
+           class="agent-dashboard-mobile-link agent-dashboard-mobile-icon{% if selected_tab == 'profile' %} is-active{% endif %}"
+           aria-label="Agent profile" {% if selected_tab == 'profile' %}aria-current="page"{% endif %}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
+            </svg>
+        </a>
+    </nav>
+
+    <div class="container dashboard-container">
+        {% if selected_tab == 'profile' %}
+        <section class="dashboard-card agent-profile-card">
+            <div class="agent-profile-heading">
+                {% if agent.photo %}
+                <img src="{{ agent.photo.url }}" alt="{{ agent.name }}" class="agent-profile-photo">
+                {% else %}
+                <div class="agent-profile-photo agent-profile-photo-placeholder" aria-hidden="true">{{ agent.name|first|upper }}</div>
+                {% endif %}
+                <div class="agent-profile-heading-copy">
+                    <h1>{{ agent.name }}</h1>
+                    <p>{{ agent.agency }} · {{ agent.city }}</p>
+                </div>
+            </div>
+            <dl class="agent-profile-details">
+                <div class="agent-profile-detail">
+                    <div><dt>Phone number</dt><dd>{{ agent.phone }}</dd></div>
+                </div>
+                <div class="agent-profile-detail">
+                    <div><dt>WhatsApp</dt><dd>{{ agent.whatsapp }}</dd></div>
+                </div>
+                <div class="agent-profile-detail">
+                    <div><dt>Primary city / region</dt><dd>{{ agent.city }}</dd></div>
+                </div>
+                <div class="agent-profile-detail">
+                    <div><dt>Specialties</dt><dd>{{ agent.specialties|default:"Not provided" }}</dd></div>
+                </div>
+                <div class="agent-profile-detail agent-profile-bio">
+                    <div><dt>Agent bio</dt><dd>{{ agent.bio|default:"No bio added."|linebreaksbr }}</dd></div>
+                </div>
+            </dl>
+        </section>
+        {% else %}
+        <div class="dashboard-section-heading">
+            <div>
+                <h1>{% if selected_tab == 'history' %}History{% else %}Active Listings{% endif %}</h1>
+                <p>
+                    {% if selected_tab == 'history' %}
+                    Completed sales and rentals
+                    {% else %}
+                    Manage properties currently available or under offer
+                    {% endif %}
+                </p>
+            </div>
+            <span class="dashboard-listing-count">
+                {% if selected_tab == 'history' %}{{ history_count }}{% else %}{{ active_count }}{% endif %}
+                {% if selected_tab == 'history' %}completed{% else %}active{% endif %}
+            </span>
+        </div>
+
+        {% if agent_properties %}
+        <div class="properties-grid agent-dashboard-properties">
+            {% for prop in agent_properties %}
+            <article class="property-card agent-dashboard-property">
+                <div class="card-media">
+                    {% if prop.images.first %}
+                    <img src="{{ prop.images.first.url }}" alt="{{ prop.title }}" loading="lazy">
+                    {% else %}
+                    <div class="fallback-img">{{ prop.city }}</div>
+                    {% endif %}
+                    <span class="badge-type">{{ prop.get_listing_type_display }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="card-meta">
+                        <span>{{ prop.get_property_type_display }}</span>
+                        <span>·</span>
+                        <span>{{ prop.city }}</span>
+                    </div>
+                    <h3><a href="{% url 'listings:property_detail' slug=prop.slug %}">{{ prop.title }}</a></h3>
+                    {% if prop.area %}<div class="address">{{ prop.area }}</div>{% endif %}
+                    <div class="specs-row">
+                        {% if prop.bedrooms %}{{ prop.bedrooms }} Beds · {% endif %}
+                        {% if prop.bathrooms %}{{ prop.bathrooms }} Baths · {% endif %}
+                        {% if prop.floor_area_sqm %}{{ prop.floor_area_sqm }} m² floor{% endif %}
+                        {% if prop.floor_area_sqm and prop.plot_area_sqm %} · {% endif %}
+                        {% if prop.plot_area_sqm %}{{ prop.plot_area_sqm }} m² plot{% endif %}
+                    </div>
+                    <div class="card-footer agent-listing-footer">
+                        <div>
+                            <div class="price">₦{{ prop.price|intcomma }}{% if prop.listing_type == 'rent' %}<small>{{ prop.get_rent_period_display|lower }}</small>{% endif %}</div>
+                            {% if prop.price_negotiable %}<span class="price-negotiable">Negotiable</span>{% endif %}
+                            <span class="badge status-{{ prop.status }}">{{ prop.get_status_display }}</span>
+                            <span class="agent-listing-views">{{ prop.views_count }} view{{ prop.views_count|pluralize }}</span>
+                        </div>
+                        <div class="agent-listing-actions">
+                            {% if prop.status == 'available' or prop.status == 'under_offer' %}
+                            <a href="{% url 'listings:property_update' slug=prop.slug %}" class="btn-sm">Edit</a>
+                            <form method="post" action="{% url 'listings:property_mark_complete' slug=prop.slug %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-sm btn-complete"
+                                        onclick="return confirm('Mark this listing as {% if prop.listing_type == 'sale' %}sold{% else %}rented{% endif %}? It will be moved to your History and cannot be changed afterwards.');">
+                                    {% if prop.listing_type == 'sale' %}Mark as sold{% else %}Mark as rented{% endif %}
+                                </button>
+                            </form>
+                            <a href="{% url 'listings:property_delete' slug=prop.slug %}" class="btn-sm btn-danger">Delist</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="dashboard-card dashboard-empty-state">
+            {% if selected_tab == 'history' %}
+            <h2>No completed sales or rentals yet</h2>
+            <p>Properties marked as sold or rented will appear here.</p>
+            {% else %}
+            <h2>No active listings yet</h2>
+            <p>Add your first property to start reaching prospective buyers and tenants.</p>
+            <a href="{% url 'listings:property_create' %}" class="btn btn-primary">New listing</a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Saved properties - EstateHub Naija{% endblock %}
+
+{% block content %}
+<section class="container saved-feature-page">
+    <header class="saved-feature-heading">
+        <p class="eyebrow">Your account</p>
+        <h1>Saved properties</h1>
+        <p>Keep the properties you want to revisit in one place.</p>
+    </header>
+
+    {% if favorites %}
+    <div class="properties-grid">
+        {% for favorite in favorites %}
+        {% with property=favorite.property %}
+        <article class="property-card">
+            <div class="card-media">
+                {% if property.images.first %}
+                <img src="{{ property.images.first.url }}" alt="{{ property.title }}" loading="lazy">
+                {% else %}
+                <div class="fallback-img">{{ property.city }}</div>
+                {% endif %}
+                <span class="badge-type">{{ property.get_listing_type_display }}</span>
+            </div>
+            <div class="card-body">
+                <div class="card-meta">{{ property.get_property_type_display }} · {{ property.city }}</div>
+                <h2><a href="{% url 'listings:property_detail' slug=property.slug %}">{{ property.title }}</a></h2>
+                {% if property.area %}<p class="address">{{ property.area }}</p>{% endif %}
+                <div class="card-footer">
+                    <div class="price">₦{{ property.price|intcomma }}</div>
+                    {% include "listings/partials/favorite_button.html" with property=property is_favorite=True %}
+                </div>
+            </div>
+        </article>
+        {% endwith %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="saved-feature-empty">
+        <h2>No saved properties yet</h2>
+        <p>Browse listings and tap Save to keep a property here.</p>
+        <a class="btn btn-primary" href="{% url 'listings:property_list' %}">Browse properties</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

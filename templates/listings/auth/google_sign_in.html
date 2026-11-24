@@ -1,0 +1,68 @@
+{% if google_client_id %}
+<div id="google-sign-in-button" class="auth-google-button"></div>
+<p id="google-sign-in-status" class="auth-google-status" aria-live="polite">Loading Google sign-in…</p>
+<p id="google-sign-in-error" class="auth-google-error" role="alert" hidden></p>
+<script>
+    function showGoogleSignInError(message) {
+        const error = document.getElementById('google-sign-in-error');
+        error.textContent = message;
+        error.hidden = false;
+        document.getElementById('google-sign-in-status').hidden = true;
+    }
+
+    function handleGoogleCredential(response) {
+        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        fetch("{% url 'auth:google_login' %}", {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ credential: response.credential })
+        })
+            .then(async (result) => {
+                const data = await result.json();
+                if (!result.ok) {
+                    throw new Error(data.error || 'Google sign-in failed. Please try again.');
+                }
+                const nextUrl = new URLSearchParams(window.location.search).get('next');
+                const target = nextUrl ? new URL(nextUrl, window.location.origin) : null;
+                const fallbackUrl = '{% url "listings:google_profile_completion" %}';
+                const redirectUrl = data.redirect_to || (target && target.origin === window.location.origin ? target.href : fallbackUrl);
+                window.location.assign(redirectUrl);
+            })
+            .catch((error) => showGoogleSignInError(error.message));
+    }
+
+    function initializeGoogleSignIn() {
+        try {
+            if (!window.google || !google.accounts || !google.accounts.id) {
+                throw new Error('Google sign-in could not be loaded.');
+            }
+            google.accounts.id.initialize({
+                client_id: "{{ google_client_id|escapejs }}",
+                callback: handleGoogleCredential
+            });
+            google.accounts.id.renderButton(
+                document.getElementById('google-sign-in-button'),
+                { theme: 'outline', size: 'large', text: 'continue_with', width: 360 }
+            );
+            document.getElementById('google-sign-in-status').hidden = true;
+        } catch (error) {
+            showGoogleSignInError(error.message || 'Google sign-in could not be loaded. Please try again.');
+        }
+    }
+</script>
+<script
+    src="https://accounts.google.com/gsi/client"
+    async
+    defer
+    onload="initializeGoogleSignIn()"
+    onerror="showGoogleSignInError('Google sign-in could not load. Check your connection or browser settings and try again.')"
+></script>
+<noscript><p class="auth-google-unavailable">Enable JavaScript to sign in with Google.</p></noscript>
+{% else %}
+<button type="button" class="btn btn-secondary btn-block" disabled>Continue with Google</button>
+<p class="auth-google-unavailable">Google sign-in is not configured yet.</p>
+{% endif %}

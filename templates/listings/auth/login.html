@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Log in - EstateHub Naija{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="auth-card">
+        <h1>Log in</h1>
+        <p class="auth-intro">Welcome back to EstateHub Naija.</p>
+
+        {% if form.non_field_errors %}
+        <div class="auth-form-errors" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            <div class="auth-fields">
+                {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}<div class="auth-field-errors">{{ error }}</div>{% endfor %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary btn-block">Log in</button>
+            </div>
+        </form>
+
+        <p class="auth-alternate">
+            <a href="{% url 'listings:password_reset_request' %}">Forgot your password?</a>
+        </p>
+
+        <p class="auth-alternate">
+            Don't have an account? <a href="{% url 'listings:auth_register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Register now</a>
+        </p>
+
+        <div class="auth-divider">or</div>
+        {% include "listings/auth/google_sign_in.html" %}
+    </div>
+</section>
+{% endblock %}
